@@ -109,9 +109,9 @@ const App = () => {
                          checked={selectedCard?.active || false}
                          onChange={(e) => setSelectedCard({...selectedCard, active: e.value})} />
             <br/><br/>
-            <Button label={selectedCard ? 'Editar' : 'Guardar'}
+            <Button label={selectedCard?.id > 0 ? 'Editar' : 'Guardar'}
                     type="submit"
-                    disabled={!(selectedCard)} />
+                    disabled={!(selectedCard.description)} />
             <Button label="Limpiar"
                     type="reset" />
           </form>
