@@ -59,7 +59,6 @@ const App = () => {
   }
 
   const enableNewCard = () => {
-    setSelectedCard(null);
     setSelectedCard(initialCard)
   }
 
@@ -100,7 +99,7 @@ const App = () => {
         <div className="p-col-3">
           <form onSubmit={(e) => handleSubmit(e)}>
             <h5>Descripcion</h5>
-            <InputTextarea disabled={!(selectedCard.description)}
+            <InputTextarea disabled={!(selectedCard)}
                            rows={5}
                            cols={30}
                            value={selectedCard?.description}
