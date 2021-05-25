@@ -1,5 +1,4 @@
 import React, {useState, useEffect, Fragment} from 'react';
-import logo from './logo.svg';
 import './App.css';
 import 'primeflex/primeflex.css';
 import 'primereact/resources/themes/saga-blue/theme.css';
@@ -13,9 +12,15 @@ import {InputTextarea} from "primereact/inputtextarea";
 import {InputSwitch} from "primereact/inputswitch";
 
 const App = () => {
+  const initialCard = {
+    id: -1,
+    description: '',
+    active: false,
+    createAt: null,
+  };
+
   const [cards, setCards] = useState([])
-  const [selectedCard, setSelectedCard] = useState(null)
-  const [newCard, setNewCard] = useState(null)
+  const [selectedCard, setSelectedCard] = useState(initialCard)
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -25,7 +30,10 @@ const App = () => {
   }, []);
 
   const selectCard = (card) => {
-    setSelectedCard(card);
+    setSelectedCard({
+      ...selectedCard,
+      ...card,
+    });
   }
 
   const removeCard = (card) => {
@@ -39,6 +47,10 @@ const App = () => {
     return <span>{rowData.active ? 'SI' : 'NO'}</span>;
   }
 
+  const dateBodyTemplate = (rowData) => {
+    return <span>{rowData.createAt ? new Date(rowData.createAt).toLocaleString('en-US') : ''}</span>;
+  }
+
   const actionsBodyTemplate = (rowData) => {
     return <Fragment>
       <Button icon="pi pi-pencil" onClick={() => {selectCard(rowData)}}/>
@@ -48,34 +60,33 @@ const App = () => {
 
   const enableNewCard = () => {
     setSelectedCard(null);
-    setNewCard({
-      description: '',
-      active: false,
-    })
+    setSelectedCard(initialCard)
   }
 
-  const sendData = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    webServices.saveCard(selectedCard || newCard).then((response) => {
-      const resp = response.data;
-      let found = false;
-      const cardsList = cards.map((it) => {
-        if (it.id === resp.id) {
-          found = true;
-          return resp;
-        }
-        return it;
+    if (selectedCard.id > 0) {
+      webServices.updateCard(selectedCard).then((response) => {
+        const resp = response.data;
+        const cardsList = cards.map((it) => {
+          if (it.id === resp.id) {
+            return resp;
+          }
+          return it;
+        });
+        setCards(cardsList);
+        setSelectedCard(initialCard);
       });
-      if (found) {
-        cardsList.push(resp);
-      }
-      setCards(cardsList);
-      setNewCard(null);
-      setSelectedCard(null);
-    });
+    } else {
+      webServices.saveCard(selectedCard).then((response) => {
+        const resp = response.data;
+        setCards([...cards, resp]);
+        setSelectedCard(initialCard);
+      });
+    }
   }
 
-  const header = (
+  const headerTemplate = (
     <div className="table-header">
       Cards
       <Button icon="pi pi-plus" onClick={() => {
@@ -87,23 +98,34 @@ const App = () => {
   return (
       <div className="p-grid">
         <div className="p-col-3">
-          <form onSubmit={(e) => sendData(e)}>
+          <form onSubmit={(e) => handleSubmit(e)}>
             <h5>Descripcion</h5>
-            <InputTextarea disabled={!(newCard || selectedCard)} rows={5} cols={30} value={newCard?.description || ''} onChange={(e) => setNewCard({...newCard, description: e.target.value})} />
+            <InputTextarea disabled={!(selectedCard.description)}
+                           rows={5}
+                           cols={30}
+                           value={selectedCard?.description}
+                           onChange={(e) => setSelectedCard({...selectedCard, description: e.target.value})} />
             <h5>Activo / Desactivo</h5>
-            <InputSwitch disabled={!(newCard || selectedCard)} checked={newCard?.active || false} onChange={(e) => setNewCard({...newCard, active: e.value})} />
+            <InputSwitch disabled={!(selectedCard)}
+                         checked={selectedCard?.active || false}
+                         onChange={(e) => setSelectedCard({...selectedCard, active: e.value})} />
             <br/><br/>
-            <Button label={selectedCard ? 'Editar' : 'Guardar'} type="submit" />
-            <Button label="Limpiar" type="reset" />
+            <Button label={selectedCard ? 'Editar' : 'Guardar'}
+                    type="submit"
+                    disabled={!(selectedCard)} />
+            <Button label="Limpiar"
+                    type="reset" />
           </form>
         </div>
         <div className="p-col-9">
-          <DataTable value={cards} className="p-datatable-striped" header={header}>
-            <Column field="id" header="ID"></Column>
-            <Column field="createAt" header="Fecha"></Column>
-            <Column header="Activo" body={statusBodyTemplate.bind(this)}></Column>
-            <Column field="description" header="Descripcion"></Column>
-            <Column header="Acciones" body={actionsBodyTemplate.bind(this)}></Column>
+          <DataTable value={cards}
+                     className="p-datatable-striped"
+                     header={headerTemplate}>
+            <Column field="id" header="ID"/>
+            <Column header="Fecha" body={dateBodyTemplate.bind(this)}/>
+            <Column header="Activo" body={statusBodyTemplate.bind(this)}/>
+            <Column field="description" header="Descripcion"/>
+            <Column header="Acciones" body={actionsBodyTemplate.bind(this)}/>
           </DataTable>
         </div>
       </div>

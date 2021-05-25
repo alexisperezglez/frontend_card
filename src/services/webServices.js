@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const baseUrl = 'http://localhost:8080/api/rest/v1/cards'
+// const baseUrl = 'NGINX_REPLACE_BASE_ENDPOINT'
+const baseUrl = 'http://localhost:8080/api/rest/v1/cards';
 const config = {
     headers: {
         'Content-Type': 'application/json',
